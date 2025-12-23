@@ -12,35 +12,83 @@ class MetrixWeb {
     channel.setMethodCallHandler(_handleMethodCall);
   }
 
-  static Future<void> _handleMethodCall(MethodCall call) async {
+  static Future<dynamic> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'onCreate':
         _handleOnCreate(call.arguments);
-        return;
+        return null;
       case 'setDeferredDeeplinkMethod':
-        await _registerCallback('setDeferredDeeplinkCallback');
-        return;
+        return _registerCallback('setDeferredDeeplinkCallback');
       case 'setAttributionMethod':
-        await _registerCallback('setAttributionCallback');
-        return;
+        return _registerCallback('setAttributionCallback');
       case 'setUserIdMethod':
-        await _registerCallback('setUserIdCallback');
-        return;
+        return _handlePromiseMethod('onMetrixUserIdReceived');
       case 'setSessionIdMethod':
-        await _registerCallback('setSessionIdCallback');
-        return;
+        return _registerCallback('setSessionIdCallback');
       case 'newEvent':
         _handleNewEvent(call.arguments);
-        return;
+        return null;
+      case 'newEventByName':
+        _handleNewEventByName(call.arguments);
+        return null;
       case 'newRevenue':
         _handleNewRevenue(call.arguments);
-        return;
+        return null;
+      case 'authorizeUser':
+        _handleAuthorizeUser(call.arguments);
+        return null;
+      case 'deauthorizeUser':
+        _handleDeauthorizeUser();
+        return null;
+      case 'setFirstName':
+        _handleSimpleAttribute('setFirstName', call.arguments, 'firstName');
+        return null;
+      case 'setLastName':
+        _handleSimpleAttribute('setLastName', call.arguments, 'lastName');
+        return null;
+      case 'setEmail':
+        _handleSimpleAttribute('setEmail', call.arguments, 'email');
+        return null;
+      case 'setHashedEmail':
+        _handleSimpleAttribute('setHashedEmail', call.arguments, 'hashedEmail');
+        return null;
+      case 'setPhoneNumber':
+        _handleSimpleAttribute('setPhoneNumber', call.arguments, 'phoneNumber');
+        return null;
+      case 'setHashedPhoneNumber':
+        _handleSimpleAttribute('setHashedPhoneNumber', call.arguments, 'hashedPhoneNumber');
+        return null;
+      case 'setCountry':
+        _handleSimpleAttribute('setCountry', call.arguments, 'country');
+        return null;
+      case 'setCity':
+        _handleSimpleAttribute('setCity', call.arguments, 'city');
+        return null;
+      case 'setRegion':
+        _handleSimpleAttribute('setRegion', call.arguments, 'region');
+        return null;
+      case 'setLocality':
+        _handleSimpleAttribute('setLocality', call.arguments, 'locality');
+        return null;
+      case 'setGender':
+        _handleSimpleAttribute('setGender', call.arguments, 'gender');
+        return null;
+      case 'setBirthday':
+        _handleSimpleAttribute('setBirthday', call.arguments, 'birthday');
+        return null;
+      case 'setCustomAttribute':
+        _handleCustomAttribute(call.arguments);
+        return null;
+      case 'onAutomationUserIdReceived':
+        return _handlePromiseMethod('onAutomationUserIdReceived');
+      case 'onMetrixUserIdReceived':
+        return _handlePromiseMethod('onMetrixUserIdReceived');
       case 'addUserAttributes':
         _handleAddUserAttributes(call.arguments);
-        return;
+        return null;
       case 'appWillOpenUrl':
         _handleAppWillOpenUrl(call.arguments);
-        return;
+        return null;
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -52,9 +100,23 @@ class MetrixWeb {
   static void _handleOnCreate(dynamic arguments) {
     final settings = _asMap(arguments);
     final appId = settings['appId'];
-    final options = Map<String, dynamic>.from(settings)..remove('appId');
+    final apiKey = settings['apiKey'];
+    final options = Map<String, dynamic>.from(settings)
+      ..remove('appId')
+      ..remove('apiKey');
     final jsOptions = _jsify(options);
     final jsSettings = _jsify(settings);
+    if (apiKey != null) {
+      if (_callMetrixMethod('init', [appId, apiKey, jsOptions])) {
+        return;
+      }
+      if (_callMetrixMethod('initialize', [appId, apiKey, jsOptions])) {
+        return;
+      }
+      if (_callMetrixMethod('create', [appId, apiKey, jsOptions])) {
+        return;
+      }
+    }
     if (_callMetrixMethod('onCreate', [jsSettings])) {
       return;
     }
@@ -80,11 +142,24 @@ class MetrixWeb {
     _callMetrixMethod('trackEvent', [slug, attributes]);
   }
 
+  static void _handleNewEventByName(dynamic arguments) {
+    final data = _asMap(arguments);
+    final name = data['name'];
+    final attributes = _jsify(data['attributes'] ?? <String, String>{});
+    if (_callMetrixMethod('newEventByName', [name, attributes])) {
+      return;
+    }
+    if (_callMetrixMethod('eventByName', [name, attributes])) {
+      return;
+    }
+    _callMetrixMethod('trackEventByName', [name, attributes]);
+  }
+
   static void _handleNewRevenue(dynamic arguments) {
     final data = _asMap(arguments);
     final slug = data['slug'];
     final amount = data['amount'];
-    final currency = data['currency'];
+    final currency = _normalizeCurrency(data['currency']);
     final orderId = data['orderId'];
     if (_callMetrixMethod('newRevenue', [slug, amount, currency, orderId])) {
       return;
@@ -97,14 +172,21 @@ class MetrixWeb {
 
   static void _handleAddUserAttributes(dynamic arguments) {
     final data = _asMap(arguments);
-    final attributes = _jsify(data['attributes'] ?? <String, String>{});
-    if (_callMetrixMethod('addUserAttributes', [attributes])) {
+    final attributes = Map<String, dynamic>.from(data['attributes'] ?? <String, String>{});
+    if (_callMetrixMethod('addUserAttributes', [_jsify(attributes)])) {
       return;
     }
-    if (_callMetrixMethod('setUserAttributes', [attributes])) {
+    if (_callMetrixMethod('setUserAttributes', [_jsify(attributes)])) {
       return;
     }
-    _callMetrixMethod('setUserProperties', [attributes]);
+    if (_callMetrixMethod('setUserProperties', [_jsify(attributes)])) {
+      return;
+    }
+    if (_hasMetrixMethod('setCustomAttribute')) {
+      attributes.forEach((key, value) {
+        _callMetrixMethod('setCustomAttribute', [key, value?.toString()]);
+      });
+    }
   }
 
   static void _handleAppWillOpenUrl(dynamic arguments) {
@@ -116,6 +198,29 @@ class MetrixWeb {
     _callMetrixMethod('openUrl', [uri]);
   }
 
+  static void _handleAuthorizeUser(dynamic arguments) {
+    final data = _asMap(arguments);
+    final customUserId = data['customUserId'];
+    _callMetrixMethod('authorizeUser', [customUserId]);
+  }
+
+  static void _handleDeauthorizeUser() {
+    _callMetrixMethod('deauthorizeUser', const []);
+  }
+
+  static void _handleSimpleAttribute(String methodName, dynamic arguments, String key) {
+    final data = _asMap(arguments);
+    final value = data[key];
+    _callMetrixMethod(methodName, [value]);
+  }
+
+  static void _handleCustomAttribute(dynamic arguments) {
+    final data = _asMap(arguments);
+    final key = data['key'];
+    final value = data['value'];
+    _callMetrixMethod('setCustomAttribute', [key, value]);
+  }
+
   static Future<dynamic> _registerCallback(String methodName) async {
     final completer = Completer<dynamic>();
     final callback = allowInterop((dynamic payload) {
@@ -125,6 +230,25 @@ class MetrixWeb {
     });
     if (_callMetrixMethod(methodName, [callback])) {
       return completer.future;
+    }
+    return null;
+  }
+
+  static Future<dynamic> _handlePromiseMethod(String methodName) async {
+    final metrixObject = _getMetrixObject();
+    if (metrixObject != null && js_util.hasProperty(metrixObject, methodName)) {
+      final result = js_util.callMethod(metrixObject, methodName, const []);
+      if (result != null && js_util.hasProperty(result, 'then')) {
+        return js_util.promiseToFuture(result);
+      }
+      return result;
+    }
+    if (context.hasProperty('metrix')) {
+      final result = context.callMethod('metrix', <dynamic>[methodName]);
+      if (result != null && js_util.hasProperty(result, 'then')) {
+        return js_util.promiseToFuture(result);
+      }
+      return result;
     }
     return null;
   }
@@ -143,6 +267,21 @@ class MetrixWeb {
     return value;
   }
 
+  static String _normalizeCurrency(dynamic currency) {
+    if (currency is String) {
+      return currency;
+    }
+    if (currency is int) {
+      if (currency == 1) {
+        return 'USD';
+      }
+      if (currency == 2) {
+        return 'EUR';
+      }
+    }
+    return 'IRR';
+  }
+
   static bool _callMetrixMethod(String method, List<dynamic> args) {
     final metrixObject = _getMetrixObject();
     if (metrixObject != null && js_util.hasProperty(metrixObject, method)) {
@@ -154,6 +293,14 @@ class MetrixWeb {
       return true;
     }
     return false;
+  }
+
+  static bool _hasMetrixMethod(String method) {
+    final metrixObject = _getMetrixObject();
+    if (metrixObject != null && js_util.hasProperty(metrixObject, method)) {
+      return true;
+    }
+    return context.hasProperty('metrix');
   }
 
   static dynamic _getMetrixObject() {
