@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
 import 'package:metrix/metrixConfig.dart';
 
@@ -10,7 +10,7 @@ class Metrix {
   static const MethodChannel _channel = const MethodChannel('metrix');
 
   static Future<void> onCreate(MetrixConfig config) async {
-    if (!Platform.isAndroid) {
+    if (defaultTargetPlatform != TargetPlatform.android && !kIsWeb) {
       await _channel
           .invokeMethod('initialize', <String, dynamic>{'appId': config.appId});
     } else {
