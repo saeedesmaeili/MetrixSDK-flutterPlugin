@@ -44,6 +44,127 @@ class Metrix {
     return;
   }
 
+  static Future<void> newEventByName(String name, Map<String, String> attributes) async {
+    await _channel.invokeMethod('newEventByName', <String, dynamic>{
+      'name': name,
+      'attributes': attributes,
+    });
+    return;
+  }
+
+  static Future<void> authorizeUser(String customUserId) async {
+    await _channel.invokeMethod('authorizeUser', <String, dynamic>{
+      'customUserId': customUserId,
+    });
+    return;
+  }
+
+  static Future<void> deauthorizeUser() async {
+    await _channel.invokeMethod('deauthorizeUser');
+    return;
+  }
+
+  static Future<void> setFirstName(String firstName) async {
+    await _channel.invokeMethod('setFirstName', <String, dynamic>{
+      'firstName': firstName,
+    });
+    return;
+  }
+
+  static Future<void> setLastName(String lastName) async {
+    await _channel.invokeMethod('setLastName', <String, dynamic>{
+      'lastName': lastName,
+    });
+    return;
+  }
+
+  static Future<void> setEmail(String email) async {
+    await _channel.invokeMethod('setEmail', <String, dynamic>{
+      'email': email,
+    });
+    return;
+  }
+
+  static Future<void> setHashedEmail(String hashedEmail) async {
+    await _channel.invokeMethod('setHashedEmail', <String, dynamic>{
+      'hashedEmail': hashedEmail,
+    });
+    return;
+  }
+
+  static Future<void> setPhoneNumber(String phoneNumber) async {
+    await _channel.invokeMethod('setPhoneNumber', <String, dynamic>{
+      'phoneNumber': phoneNumber,
+    });
+    return;
+  }
+
+  static Future<void> setHashedPhoneNumber(String hashedPhoneNumber) async {
+    await _channel.invokeMethod('setHashedPhoneNumber', <String, dynamic>{
+      'hashedPhoneNumber': hashedPhoneNumber,
+    });
+    return;
+  }
+
+  static Future<void> setCountry(String country) async {
+    await _channel.invokeMethod('setCountry', <String, dynamic>{
+      'country': country,
+    });
+    return;
+  }
+
+  static Future<void> setCity(String city) async {
+    await _channel.invokeMethod('setCity', <String, dynamic>{
+      'city': city,
+    });
+    return;
+  }
+
+  static Future<void> setRegion(String region) async {
+    await _channel.invokeMethod('setRegion', <String, dynamic>{
+      'region': region,
+    });
+    return;
+  }
+
+  static Future<void> setLocality(String locality) async {
+    await _channel.invokeMethod('setLocality', <String, dynamic>{
+      'locality': locality,
+    });
+    return;
+  }
+
+  static Future<void> setGender(String gender) async {
+    await _channel.invokeMethod('setGender', <String, dynamic>{
+      'gender': gender,
+    });
+    return;
+  }
+
+  static Future<void> setBirthday(String birthday) async {
+    await _channel.invokeMethod('setBirthday', <String, dynamic>{
+      'birthday': birthday,
+    });
+    return;
+  }
+
+  static Future<void> setCustomAttribute(String key, String value) async {
+    await _channel.invokeMethod('setCustomAttribute', <String, dynamic>{
+      'key': key,
+      'value': value,
+    });
+    return;
+  }
+
+  static Future<String> onAutomationUserIdReceived() async {
+    final response = await _channel.invokeMethod('onAutomationUserIdReceived');
+    return response;
+  }
+
+  static Future<String> onMetrixUserIdReceived() async {
+    final response = await _channel.invokeMethod('onMetrixUserIdReceived');
+    return response;
+  }
 
   static Future<void> addUserAttributes(Map<String, String> attributes) async {
     await _channel.invokeMethod('addUserAttributes', <String, dynamic>{

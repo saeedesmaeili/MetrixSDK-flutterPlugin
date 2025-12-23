@@ -8,6 +8,7 @@ class MetrixConfig {
   bool locationListening;
   bool lunchDeferredDeeplink;
   String store;
+  String apiKey;
   String _firebaseAppId;
   String _firebaseProjectId;
   String _firebaseApiKey;
@@ -27,6 +28,8 @@ class MetrixConfig {
   bool loggingEnabled;
 
   bool flushEventsOnClose;
+  Map<String, dynamic> sessionTracking;
+  Map<String, dynamic> onSiteMessaging;
 
   Function sessionIdCallback;
   Function userIdCallback;
@@ -60,6 +63,7 @@ class MetrixConfig {
         },
         'locationListening': locationListening,
         'store': store,
+        'apiKey': apiKey,
         'eventUploadThreshold': eventUploadThreshold,
         'eventUploadMaxBatchSize': eventUploadMaxBatchSize,
         'eventMaxCount': eventMaxCount,
@@ -73,5 +77,7 @@ class MetrixConfig {
         'firebaseApiKey': _firebaseApiKey,
         'lunchDeferredDeeplink': lunchDeferredDeeplink,
         'flushEventsOnClose': flushEventsOnClose,
+        'sessionTracking': sessionTracking,
+        'onSiteMessaging': onSiteMessaging,
       };
 }
